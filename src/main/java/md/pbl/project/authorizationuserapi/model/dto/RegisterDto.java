@@ -13,12 +13,12 @@ public class RegisterDto {
     private Long orgId;
     @NotNull
     private String username;
-    private String name;
+    private String fullName;
     @NotNull
     private String email;
     @NotNull
 
     private String password;
     @NotNull
-    private String role;
+    private Role role;
 }

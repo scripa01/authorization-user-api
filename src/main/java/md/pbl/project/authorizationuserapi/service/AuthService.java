@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,18 +24,20 @@ public class AuthService {
     private final OrganizationProjectUserClient orgClient;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private static final String ADMIN_USERNAME = "admin";
+    private static final String ADMIN_EMAIL = "admin@example.com";
+    private static final String ADMIN_RAW_PASSWORD = "veryStrongPassword2025!";
 
     public AuthResponseDto register(RegisterDto dto) {
-        // 1) проверить в org-сервисе
         List<UserDto> existing = orgClient.findByUsername(dto.getOrgId(), dto.getUsername());
         if (!existing.isEmpty()) {
             throw new RuntimeException("User already exists in organisation-project-user-api");
         }
-        // 2) проверить в собственном репозитории
+
         if (authUserRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("User already registered");
         }
-        // 3) сохранить credentials
+
         AuthUser authUser = AuthUser.builder()
                 .username(dto.getUsername())
                 .email(dto.getEmail())
@@ -42,23 +45,43 @@ public class AuthService {
                 .role(dto.getRole())
                 .build();
         authUserRepository.save(authUser);
-        // 4) создать профиль в org-сервисе
-        CreateUserDto createUser = new CreateUserDto(dto.getUsername(), dto.getEmail(), String.valueOf(dto.getRole()), dto.getName());
+
+        CreateUserDto createUser = new CreateUserDto(dto.getUsername(), dto.getEmail(), dto.getFullName(), dto.getRole());
         orgClient.createUser(dto.getOrgId(), createUser);
-        // 5) вернуть токен
-        String token = jwtUtil.generateToken(authUser.getEmail());
-        return new AuthResponseDto(token, Role.valueOf(dto.getRole()));
+
+        String token = jwtUtil.generateToken(authUser);
+        return new AuthResponseDto(token, dto.getRole());
     }
 
     @Transactional(readOnly = true)
     public AuthResponseDto login(AuthRequest request) {
-        AuthUser user = authUserRepository.findByEmail(request.getEmail())
+        AuthUser user = authUserRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Invalid password");
         }
 
-        return new AuthResponseDto(jwtUtil.generateToken(user.getEmail()), Role.valueOf(user.getRole()));
+        return new AuthResponseDto(jwtUtil.generateToken(user), user.getRole());
+    }
+
+    @Transactional
+    public AuthResponseDto ensureAdminAndGetToken() {
+        Optional<AuthUser> optAdmin = authUserRepository.findByUsername(ADMIN_USERNAME);
+
+        AuthUser admin;
+        if (optAdmin.isEmpty()) {
+            admin = AuthUser.builder()
+                    .username(ADMIN_USERNAME)
+                    .email(ADMIN_EMAIL)
+                    .password(passwordEncoder.encode(ADMIN_RAW_PASSWORD))
+                    .role(Role.ADMIN)
+                    .build();
+            authUserRepository.save(admin);
+        } else {
+            admin = optAdmin.get();
+        }
+
+        return new AuthResponseDto(jwtUtil.generateToken(admin), admin.getRole());
     }
 }

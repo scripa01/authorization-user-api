@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import md.pbl.project.authorizationuserapi.model.Role;
 
 @Data
 @NoArgsConstructor
@@ -13,5 +14,5 @@ public class CreateUserDto {
     @Email
     private String email;
     private String fullName;
-    private String role;
+    private Role role;
 }

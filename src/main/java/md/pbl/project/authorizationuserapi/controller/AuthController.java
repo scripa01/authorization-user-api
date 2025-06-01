@@ -7,16 +7,19 @@ import md.pbl.project.authorizationuserapi.model.dto.AuthResponseDto;
 import md.pbl.project.authorizationuserapi.model.dto.RegisterDto;
 import md.pbl.project.authorizationuserapi.service.AuthService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+
+    @GetMapping("/init-admin")
+    public ResponseEntity<AuthResponseDto> initAdmin() {
+        AuthResponseDto adminAndGetToken = authService.ensureAdminAndGetToken();
+        return ResponseEntity.ok(adminAndGetToken);
+    }
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody RegisterDto dto) {
