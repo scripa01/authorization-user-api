@@ -13,8 +13,9 @@ services:
       - auth-db-data:/var/lib/postgresql/data
 
   authorization-user-api:
+    image: authorization-user-api
     build:
-      context: ./authorization-user-api
+      context: .
     container_name: authorization-user-api
     depends_on:
       - auth-db
