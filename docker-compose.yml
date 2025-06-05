@@ -11,6 +11,8 @@ services:
       - "5432:5432"
     volumes:
       - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - backend-net
 
   authorization-user-api:
     image: authorization-user-api
@@ -25,6 +27,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/authorization-user-api
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 123456789
-
+    networks:
+      - backend-net
+      
 volumes:
   auth-db-data:
+
+networks:
+  backend-net:
+    external: true
