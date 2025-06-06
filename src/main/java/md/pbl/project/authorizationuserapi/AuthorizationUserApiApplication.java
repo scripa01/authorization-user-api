@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @SpringBootApplication
 @EnableFeignClients(basePackages = "md.pbl.project.authorizationuserapi.client")
@@ -21,6 +22,7 @@ public class AuthorizationUserApiApplication {
     public static void main(String[] args) {
         SpringApplication.run(AuthorizationUserApiApplication.class, args);
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -32,8 +34,13 @@ public class AuthorizationUserApiApplication {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
-        http.csrf().disable()
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http, JwtFilter jwtFilter,
+            CorsConfigurationSource corsConfigurationSource
+    ) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf().disable()
                 .authorizeHttpRequests()
                 .requestMatchers("/auth/login", "/auth/register", "/auth/init-admin").permitAll()
                 .anyRequest().authenticated()
@@ -41,7 +48,6 @@ public class AuthorizationUserApiApplication {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 }
