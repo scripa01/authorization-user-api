@@ -42,7 +42,7 @@ public class AuthorizationUserApiApplication {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/auth/login", "/auth/register", "/auth/init-admin").permitAll()
+                .requestMatchers("/auth/login", "/auth/register", "/auth/init-admin", "/auth/get-me").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);

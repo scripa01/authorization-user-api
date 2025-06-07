@@ -21,10 +21,14 @@ public class AuthController {
         return ResponseEntity.ok(adminAndGetToken);
     }
 
+    @GetMapping("/get-me")
+    public ResponseEntity<AuthResponseDto> getUserByToken(@RequestHeader("Authorization") String token) {
+        return ResponseEntity.ok(authService.getUserByToken(token));
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody RegisterDto dto) {
-        authService.register(dto);
-        return ResponseEntity.status(201).build();
+    public ResponseEntity<AuthResponseDto> register(@RequestBody RegisterDto dto) {
+        return ResponseEntity.ok(authService.register(dto));
     }
 
     @PostMapping("/login")

@@ -50,7 +50,7 @@ public class AuthService {
         orgClient.createUser(dto.getOrgId(), createUser);
 
         String token = jwtUtil.generateToken(authUser);
-        return new AuthResponseDto(token, dto.getRole());
+        return new AuthResponseDto(authUser.getId(), authUser.getEmail(), token, dto.getRole());
     }
 
     @Transactional(readOnly = true)
@@ -62,7 +62,7 @@ public class AuthService {
             throw new BadCredentialsException("Invalid password");
         }
 
-        return new AuthResponseDto(jwtUtil.generateToken(user), user.getRole());
+        return new AuthResponseDto(user.getId(), user.getEmail(), jwtUtil.generateToken(user), user.getRole());
     }
 
     @Transactional
@@ -82,6 +82,14 @@ public class AuthService {
             admin = optAdmin.get();
         }
 
-        return new AuthResponseDto(jwtUtil.generateToken(admin), admin.getRole());
+        return new AuthResponseDto(admin.getId(), admin.getEmail(), jwtUtil.generateToken(admin), admin.getRole());
+    }
+
+    @Transactional(readOnly = true)
+    public AuthResponseDto getUserByToken(String token) {
+        String username = jwtUtil.extractUsername(token);
+        AuthUser authUser = authUserRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User by UserName not found"));
+        return new AuthResponseDto(authUser.getId(), authUser.getEmail(), token, authUser.getRole());
     }
 }
